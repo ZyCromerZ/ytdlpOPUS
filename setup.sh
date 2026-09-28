@@ -22,7 +22,8 @@ source venv/bin/activate
 # Upgrade pip
 echo "[*] Upgrading pip..."
 pip install --upgrade pip
-
+pip install mutagen
+pip install Pillow
 # Install packages for both scripts
 echo "[*] Installing required packages..."
 pip install yt-dlp ffmpeg-python mutagen Pillow

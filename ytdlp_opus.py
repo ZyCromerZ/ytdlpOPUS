@@ -14,10 +14,11 @@ import traceback
 from datetime import datetime
 
 class UniversalAudioDownloader:
-    def __init__(self):
+    def __init__(self, output_format: str = "mp3"):
         # Set output directory to the same folder as the script
         script_dir = Path(__file__).parent.absolute()
-        self.output_dir = script_dir / "Audio Downloads"
+        self.output_format = output_format
+        self.output_dir = script_dir / "Audio Downloads" / output_format
         self.output_dir.mkdir(parents=True, exist_ok=True)
         
         # Get the Python executable path (for virtual environment)
@@ -132,6 +133,7 @@ class UniversalAudioDownloader:
         print("[*] • YouTube Music")
         print("[*] • YouTube")
         print("[*] • And more...")
+        print(f"[*] format audio: {self.output_format}")
         print("[*] Paste any audio URL. Type 'exit' to quit.")
         print(f"[*] Downloading to: {self.output_dir}")
         if self.ffmpeg_path:
@@ -222,7 +224,7 @@ class UniversalAudioDownloader:
     def create_safe_filename(self, title: str, artist: str = "") -> str:
         """Create a safe filename using title and artist"""
         if not title or title == 'Unknown':
-            return "unknown_track.mp3"
+            return (f"unknown_track.{self.output_format}")
         
         # Combine artist and title if both exist
         if artist and artist != 'Unknown Artist' and artist != 'Unknown':
@@ -252,7 +254,7 @@ class UniversalAudioDownloader:
             filename = filename[:150] + "..."
         
         # Add extension
-        filename = f"{filename}.mp3"
+        filename = f"{filename}.{self.output_format}"
         
         return filename
 
@@ -375,7 +377,7 @@ class UniversalAudioDownloader:
                 'artist': artist,
                 'album': album,
                 'track_number': info.get('track_number', ''),
-                'release_year': info.get('release_year', ''),
+                'release_year': info.get('upload_date', ''),
                 'release_date': info.get('release_date', ''),
                 'genre': info.get('genre', ''),
                 'platform': platform,
@@ -424,6 +426,13 @@ class UniversalAudioDownloader:
                 "bestaudio"
             )
         elif platform == 'youtube_music':
+            # YouTube Music: Prefer Opus, then best audio
+            return (
+                "bestaudio[ext=webm][acodec=opus]/"
+                "bestaudio[ext=m4a]/"
+                "bestaudio"
+            )
+        elif platform == 'youtube':
             # YouTube Music: Prefer Opus, then best audio
             return (
                 "bestaudio[ext=webm][acodec=opus]/"
@@ -486,7 +495,7 @@ class UniversalAudioDownloader:
                 self.python_exe, "-m", "yt_dlp",
                 "-f", format_spec,
                 "-x",
-                "--audio-format", "mp3",
+                "--audio-format", self.output_format,
                 "--audio-quality", "0",  # Best quality
                 "--no-playlist",
                 "--embed-metadata",
@@ -539,10 +548,10 @@ class UniversalAudioDownloader:
             
             if proc.returncode == 0 and downloaded_file and downloaded_file.exists():
                 # If not already mp3, rename to mp3
-                if downloaded_file.suffix.lower() != '.mp3':
-                    mp3_file = output_file.with_suffix('.mp3')
-                    shutil.move(str(downloaded_file), str(mp3_file))
-                    file_size = mp3_file.stat().st_size / (1024 * 1024)
+                if downloaded_file.suffix.lower() != f'.{self.output_format}':
+                    rename_file = output_file.with_suffix(f'.{self.output_format}')
+                    shutil.move(str(downloaded_file), str(rename_file))
+                    file_size = rename_file.stat().st_size / (1024 * 1024)
                 else:
                     file_size = downloaded_file.stat().st_size / (1024 * 1024)
                 
@@ -678,11 +687,12 @@ def main():
     parser.add_argument('url', nargs='?', help='Audio URL (YouTube Music, SoundCloud, etc.)')
     parser.add_argument('--file', '-f', help='Text file containing multiple URLs')
     parser.add_argument('--retry', '-r', action='store_true', help='Retry failed downloads from log')
+    parser.add_argument('--output-format', '-o', help='Output format (mp3, opus, m4a, ogg)')
     
     args = parser.parse_args()
     
-    downloader = UniversalAudioDownloader()
-    
+    downloader = UniversalAudioDownloader(output_format=args.output_format or "mp3")
+
     # Check if there are existing failed downloads
     if downloader.failed_downloads_file.exists():
         try:
@@ -777,7 +787,11 @@ def main():
                 if url.lower() == 'retry':
                     downloader.retry_failed_downloads()
                     continue
-                
+
+                if url.lower() == 'format':
+                    print(f"[*] {downloader.output_format}!")
+                    continue
+
                 if not url:
                     continue
                 

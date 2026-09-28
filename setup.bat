@@ -42,7 +42,8 @@ python -m pip install --upgrade pip
 
 echo [*] Installing yt-dlp in virtual environment...
 python -m pip install yt-dlp
-
+python -m pip install mutagen
+python -m pip install Pillow
 :: Check if ffmpeg exists, if not, show instructions
 echo.
 echo [*] Checking for ffmpeg...
