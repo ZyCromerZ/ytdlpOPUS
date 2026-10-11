@@ -14,7 +14,7 @@ import traceback
 from datetime import datetime
 
 class UniversalAudioDownloader:
-    def __init__(self, output_format: str = "mp3"):
+    def __init__(self, output_format: str = "opus"):
         # Set output directory to the same folder as the script
         script_dir = Path(__file__).parent.absolute()
         self.output_format = output_format
@@ -241,7 +241,7 @@ class UniversalAudioDownloader:
         filename = ''.join(char for char in filename if ord(char) >= 32)
         
         # Normalize unicode characters
-        filename = unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').decode('ascii')
+        # filename = unicodedata.normalize('NFKD', filename).encode('ascii', 'ignore').decode('ascii')
         
         # Replace multiple spaces with single space
         filename = re.sub(r'\s+', ' ', filename)
@@ -272,7 +272,7 @@ class UniversalAudioDownloader:
         name = ''.join(char for char in name if ord(char) >= 32)
         
         # Normalize unicode characters
-        name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode('ascii')
+        # name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode('ascii')
         
         # Replace multiple spaces with single space
         name = re.sub(r'\s+', ' ', name)
@@ -691,7 +691,7 @@ def main():
     
     args = parser.parse_args()
     
-    downloader = UniversalAudioDownloader(output_format=args.output_format or "mp3")
+    downloader = UniversalAudioDownloader(output_format=args.output_format or "opus")
 
     # Check if there are existing failed downloads
     if downloader.failed_downloads_file.exists():

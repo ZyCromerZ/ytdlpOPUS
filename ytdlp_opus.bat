@@ -3,7 +3,7 @@ REM Activate the virtual environment
 call venv\Scripts\activate
 
 set "input=opus"
-set /p "input=Keep blank to use opus format, enter format to use [%input%]: "
+set /p "input=Keep blank to use '[%input%]' format, enter format to use:"
 
 echo download format: %input%
 
